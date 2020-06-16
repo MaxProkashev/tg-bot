@@ -805,8 +805,8 @@ func main() {
 	//truncateTable(db, "bot_user")				// Удаление всех записей != Удаление таблицы
 	//truncateTable(db, "asking")
 	//
-	//dropTable(db, "bot_user") // Удаление таблицы
-	//dropTable(db, "asking")
+	dropTable(db, "bot_user") // Удаление таблицы
+	dropTable(db, "asking")
 	//
 	//time.Sleep(2 * time.Second) // Спячка на 2 секунд
 	//
