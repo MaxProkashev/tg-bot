@@ -767,7 +767,7 @@ func newAsk(db *sql.DB, userID int, askID int) {
 func setText(db *sql.DB, table string, userID int, column string, value string) {
 	_, err := db.Exec("UPDATE " + table + " SET " + column + " = '" + value + "' WHERE id = " + strconv.Itoa(userID) + ";")
 	if err != nil {
-		log.Fatalf("[X] Could not update %d. Reason: %s", userID, err.Error())
+		log.Fatalf("[X] Could no update %d. Reason: %s", userID, err.Error())
 	} else {
 		log.Printf("[OK] User %d update", userID)
 	}
