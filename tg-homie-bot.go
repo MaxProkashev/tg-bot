@@ -131,75 +131,262 @@ func menuReply(role string) interface{} {
 // Логика регистрации пользователя
 func logicReg(hook hookConfig, update tgbotapi.Update) {
 	switch hook.status {
-	case "reg1": // role
-		switch hook.hasCallback {
-		case true:
-			if update.CallbackQuery.Data == "Решателем" {
-				newStatus(db, hook.userID, "reg2")
-				setText(db, "bot_user", hook.userID, "role", "solver")
-			} else if update.CallbackQuery.Data == "Спрашивателем" {
-				newStatus(db, hook.userID, "reg2")
-				setText(db, "bot_user", hook.userID, "role", "asking")
-			}
-			bot.Send(tgbotapi.NewMessage(hook.chatID, "Ok, твое Имя?"))
-		default:
-			bot.Send(tgbotapi.NewMessage(hook.chatID, "Есть только два типа людей 🎸"))
-		}
-	case "reg2": // name
+	case "reg1": // name
 		switch hook.hasText {
 		case true:
-			if len(update.Message.Text) >= 3 {
-				newStatus(db, hook.userID, "reg3")
-				setText(db, "bot_user", hook.userID, "name", update.Message.Text)
-				bot.Send(tgbotapi.NewMessage(hook.chatID, "Твоя Фамилия?"))
-			} else {
-				bot.Send(tgbotapi.NewMessage(hook.chatID, "Таких коротких Имен не бывает ☹️"))
-			}
+			newStatus(db, hook.userID, "reg2")
+			setText(db, "bot_user", hook.userID, "name", update.Message.Text)
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Ok, Ваша фамилия?"))
 		default:
-			bot.Send(tgbotapi.NewMessage(hook.chatID, "Пожалуйста, отправьте текст"))
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Введите текст 📝"))
 		}
-	case "reg3": // surname
+	case "reg2": // surname
 		switch hook.hasText {
 		case true:
-			if len(update.Message.Text) >= 3 {
-				if getText(db, "bot_user", hook.userID, "role") == "solver" {
-					newStatus(db, hook.userID, "reg35")
-					setText(db, "bot_user", hook.userID, "surname", update.Message.Text)
-					bot.Send(tgbotapi.NewMessage(hook.chatID, "Где вы учитесь? или работаете"))
-				} else {
-					newStatus(db, hook.userID, "reg4")
-					setText(db, "bot_user", hook.userID, "surname", update.Message.Text)
-					bot.Send(tgbotapi.NewMessage(hook.chatID, "Отправь фоточку 📷"))
-				}
-			} else {
-				bot.Send(tgbotapi.NewMessage(hook.chatID, "Таких коротких Фамилий не бывает ☹️"))
-			}
+			newStatus(db, hook.userID, "reg3")
+			setText(db, "bot_user", hook.userID, "surname", update.Message.Text)
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Ok, давайте добавим фотографию 📷 в профиль"))
 		default:
-			bot.Send(tgbotapi.NewMessage(hook.chatID, "Пожалуйста, отправьте текст"))
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Введите текст 📝"))
 		}
-	case "reg35": // level
-		switch hook.hasText {
-		case true:
-			if len(update.Message.Text) >= 3 {
-				newStatus(db, hook.userID, "reg4")
-				setText(db, "bot_user", hook.userID, "level", update.Message.Text)
-				bot.Send(tgbotapi.NewMessage(hook.chatID, "Отправь фоточку 📷"))
-			} else {
-				bot.Send(tgbotapi.NewMessage(hook.chatID, "Пожалуйста чуть больше буковок"))
-			}
-		default:
-			bot.Send(tgbotapi.NewMessage(hook.chatID, "Пожалуйста, отправьте текст"))
-		}
-	case "reg4": // img
+	case "reg3": // img
 		switch hook.hasPhoto {
 		case true:
-			newStatus(db, hook.userID, "menu")
+			newStatus(db, hook.userID, "reg4")
 			setText(db, "bot_user", hook.userID, "img", (*update.Message.Photo)[0].FileID)
-			menu := tgbotapi.NewMessage(hook.chatID, "Ура!🎉 Теперь ты зарегистрирован в социальной сети интернет 🌐. Выбирай что делать дальше.")
+
+			msg := tgbotapi.NewMessage(hook.chatID, "Ok, Вы учитесь?")
+			msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("В школе", "В школе"),
+				),
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("В колледже", "В колледже"),
+				),
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("В университете", "В университете"),
+				),
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("Не учусь", "Не учусь"),
+				),
+			)
+			bot.Send(msg)
+		default:
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Фотографию 📷?"))
+		}
+	case "reg4": //study
+		switch hook.hasCallback {
+		case true:
+			switch update.CallbackQuery.Data {
+			case "В школе":
+				newStatus(db, hook.userID, "reg4school")
+				msg := tgbotapi.NewMessage(hook.chatID, "Какой класс?")
+				msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("Начальная школа", "Начальная школа"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("5", "5"),
+						tgbotapi.NewInlineKeyboardButtonData("6", "6"),
+						tgbotapi.NewInlineKeyboardButtonData("7", "7"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("8", "8"),
+						tgbotapi.NewInlineKeyboardButtonData("9", "9"),
+						tgbotapi.NewInlineKeyboardButtonData("10", "10"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("11", "11"),
+					),
+				)
+				bot.Send(msg)
+			case "В колледже":
+				newStatus(db, hook.userID, "reg4college")
+				msg := tgbotapi.NewMessage(hook.chatID, "Какой курс?")
+				msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("1", "1"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("2", "2"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("3", "3"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("4", "4"),
+					),
+				)
+				bot.Send(msg)
+			case "В университете":
+				newStatus(db, hook.userID, "reg4univer")
+				msg := tgbotapi.NewMessage(hook.chatID, "Какой курс?")
+				msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("1", "1"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("2", "2"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("3", "3"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("4", "4"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("5", "5"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("6", "6"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("Магистратура", "Магистратура"),
+					),
+				)
+				bot.Send(msg)
+			case "Не учусь":
+				newStatus(db, hook.userID, "reg5")
+				setText(db, "bot_user", hook.userID, "study", "Не учится")
+			default:
+				bot.Send(tgbotapi.NewMessage(hook.chatID, "Выеберете один из вариантов ответа"))
+			}
+		default:
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Выеберете один из вариантов ответа"))
+		}
+	case "reg4school":
+		switch hook.hasCallback {
+		case true:
+			switch update.CallbackQuery.Data {
+			case "Начальная школа":
+				newStatus(db, hook.userID, "reg4schoolnum")
+				setText(db, "bot_user", hook.userID, "temp", "начальная школа")
+				bot.Send(tgbotapi.NewMessage(hook.chatID, "Введите номер школы"))
+			default:
+				newStatus(db, hook.userID, "reg4schoolnum")
+				setText(db, "bot_user", hook.userID, "temp", update.CallbackQuery.Data+" класс")
+				bot.Send(tgbotapi.NewMessage(hook.chatID, "Введите номер школы"))
+			}
+		default:
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Выеберете один из вариантов ответа"))
+		}
+	case "reg4schoolnum":
+		switch hook.hasText {
+		case true:
+			newStatus(db, hook.userID, "reg5")
+			temp:=getText(db,"bot_user",hook.userID,"temp")
+			setText(db, "bot_user", hook.userID, "study", "школа "+update.Message.Text+" "+temp)
+
+			msg := tgbotapi.NewMessage(hook.chatID, "Ok, Вы работаете?")
+			msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("Да", "Да"),
+				),
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("Нет", "Нет"),
+				),
+			)
+			bot.Send(msg)
+		default:
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Введите текст 📝"))
+		}
+	case "reg4college":
+		switch hook.hasCallback {
+		case true:
+			newStatus(db, hook.userID, "reg4collegenum")
+			setText(db, "bot_user", hook.userID, "temp", update.CallbackQuery.Data+" курс")
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Введите название колледжа"))
+		default:
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Выеберете один из вариантов ответа"))
+		}
+	case "reg4collegenum":
+		switch hook.hasText {
+		case true:
+			newStatus(db, hook.userID, "reg5")
+			temp:=getText(db,"bot_user",hook.userID,"temp")
+			setText(db, "bot_user", hook.userID, "study", update.Message.Text+" "+temp)
+
+			msg := tgbotapi.NewMessage(hook.chatID, "Ok, Вы работаете?")
+			msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("Да", "Да"),
+				),
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("Нет", "Нет"),
+				),
+			)
+			bot.Send(msg)
+		default:
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Введите текст 📝"))
+		}
+	case "reg4univer":
+		switch hook.hasCallback {
+		case true:
+			switch update.CallbackQuery.Data {
+			case "Магистратура":
+				newStatus(db, hook.userID, "reg4univernum")
+				setText(db, "bot_user", hook.userID, "temp", "магистратура")
+				bot.Send(tgbotapi.NewMessage(hook.chatID, "Название университета?"))
+			default:
+				newStatus(db, hook.userID, "reg4univernum")
+				setText(db, "bot_user", hook.userID, "temp", update.CallbackQuery.Data+" курс")
+				bot.Send(tgbotapi.NewMessage(hook.chatID, "Название университета?"))
+			}
+		default:
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Выеберете один из вариантов ответа"))
+		}
+	case "reg4univernum":
+		switch hook.hasText {
+		case true:
+			newStatus(db, hook.userID, "reg5")
+			temp:=getText(db,"bot_user",hook.userID,"temp")
+			setText(db, "bot_user", hook.userID, "study", update.Message.Text+" "+temp)
+
+			msg := tgbotapi.NewMessage(hook.chatID, "Ok, Вы работаете?")
+			msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("Да", "Да"),
+				),
+				tgbotapi.NewInlineKeyboardRow(
+					tgbotapi.NewInlineKeyboardButtonData("Нет", "Нет"),
+				),
+			)
+			bot.Send(msg)
+		default:
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Введите текст 📝"))
+		}
+	case "reg5": //work
+		switch hook.hasCallback {
+		case true:
+			switch update.CallbackQuery.Data {
+			case "Да":
+				newStatus(db, hook.userID, "reg5work")
+				bot.Send(tgbotapi.NewMessage(hook.chatID, "Где вы работаете?"))
+			case "Нет":
+				newStatus(db, hook.userID, "menu")
+				setText(db, "bot_user", hook.userID, "work", "Не работает")
+
+				menu := tgbotapi.NewMessage(hook.chatID, "Ура! Вы в системе 🌐")
+				menu.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
+				bot.Send(menu)
+			default:
+				bot.Send(tgbotapi.NewMessage(hook.chatID, "Выеберете один из вариантов ответа"))
+			}
+		default:
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Выеберете один из вариантов ответа"))
+		}
+	case "reg5work":
+		switch hook.hasText {
+		case true:
+			newStatus(db, hook.userID, "menu")
+			setText(db, "bot_user", hook.userID, "work", update.Message.Text)
+			
+			
+			menu := tgbotapi.NewMessage(hook.chatID, "Ура! Вы в системе 🌐")
 			menu.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
 			bot.Send(menu)
 		default:
-			bot.Send(tgbotapi.NewMessage(hook.chatID, "Фоточку 📷 дружище"))
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Введите текст 📝"))
 		}
 	}
 }
@@ -275,12 +462,12 @@ func logicSearch(hook hookConfig, update tgbotapi.Update) {
 				level string
 				info  string
 				price string
-	
+
 				urgPre string
 			)
 			rows.Scan(&id, &urg, &date, &level, &info, &price)
-	
-			setInt(db,"bot_user",hook.userID,"lastask",id)
+
+			setInt(db, "bot_user", hook.userID, "lastask", id)
 			if urg == "quick" {
 				urgPre = "Срочная"
 			}
@@ -292,7 +479,7 @@ func logicSearch(hook hookConfig, update tgbotapi.Update) {
 	<b>Уровень</b> ` + level + `
 	<b>Информация</b> ` + info + `
 	<b>Цена</b> ` + price
-	
+
 			NextEnd := tgbotapi.NewMessage(hook.chatID, htmlText)
 			NextEnd.ParseMode = tgbotapi.ModeHTML
 			keyboard := tgbotapi.InlineKeyboardMarkup{}
@@ -303,7 +490,7 @@ func logicSearch(hook hookConfig, update tgbotapi.Update) {
 			keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, row)
 			NextEnd.ReplyMarkup = keyboard
 			bot.Send(NextEnd)
-			flag=true
+			flag = true
 			return
 		}
 		if flag == false {
@@ -317,7 +504,7 @@ func logicSearch(hook hookConfig, update tgbotapi.Update) {
 
 func logicTake(hook hookConfig, update tgbotapi.Update) {
 	id := getInt(db, "bot_user", hook.userID, "lastask")
-	setInt(db,"asking",id,"idSolv",hook.userID)
+	setInt(db, "asking", id, "idSolv", hook.userID)
 }
 
 // Профиль пользователя
@@ -548,21 +735,14 @@ func webhookHandler(c *gin.Context) {
 			bot.Send(tgbotapi.NewMessage(hook.chatID, "Пожалуйста, начните с команды /start"))
 		} else if update.Message.Command() == "start" {
 			// Приветствие до регистрации
-			htmlText := `Привет!. Этот бот решит твои учебные вопросы, с помощью других людей. Ты можешь сам стать одним из них. Но сперва, давай пройдем короткую регистрацию`
+			htmlText := `(Придумать приветствие)`
 			msg := tgbotapi.NewMessage(hook.chatID, htmlText)
 			msg.ParseMode = tgbotapi.ModeHTML
 			bot.Send(msg)
 
-			// Выбор роли
-			chooseRole := tgbotapi.NewMessage(hook.chatID, "Кем ты хочешь быть?")
-			keyboard := tgbotapi.InlineKeyboardMarkup{}
-			var row []tgbotapi.InlineKeyboardButton
-			row = append(row, tgbotapi.NewInlineKeyboardButtonData("Решателем", "Решателем"))
-			row = append(row, tgbotapi.NewInlineKeyboardButtonData("Спрашивателем", "Спрашивателем"))
-			keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, row)
-			chooseRole.ReplyMarkup = keyboard
-			bot.Send(chooseRole)
+			// new id
 			newID(db, hook.userID)
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Как Вас зовут?"))
 
 		} else {
 			bot.Send(tgbotapi.NewMessage(hook.chatID, "Пожалуйста, начните с команды /start"))
@@ -571,7 +751,6 @@ func webhookHandler(c *gin.Context) {
 
 }
 
-//
 // telegram api
 func initTelegram() {
 	var err error
@@ -591,7 +770,6 @@ func initTelegram() {
 	}
 }
 
-//
 // MAIN
 //
 func main() {
@@ -649,19 +827,19 @@ func main() {
 
 // Создание таблицы
 //
-// bot_user(id INT PRIMARY KEY,role TEXT,name TEXT,surname TEXT,level TEXT,img TEXT,status TEXT,lastask INT)
+// bot_user(id INT PRIMARY KEY,name TEXT,surname TEXT,img TEXT,study TEXT,work TEXT,status TEXT,lastask INT,temp TEXT)
 //
-// asking(idUser INT,id INT PRIMARY KEY,idSolv INT,urg TEXT,date TEXT,level TEXT,info TEXT,price TEXT)
+// asking(id INT,idask INT PRIMARY KEY,idsolv INT,date TEXT,theme TEXT,info TEXT)
 func createTable(db *sql.DB, name string) {
 	if name == "bot_user" {
-		_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + name + " (id INT PRIMARY KEY,role TEXT,name TEXT,surname TEXT,level TEXT,img TEXT,status TEXT,lastask INT);")
+		_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + name + " (id INT PRIMARY KEY,name TEXT,surname TEXT,img TEXT,study TEXT,work TEXT,status TEXT,lastask INT,temp TEXT);")
 		if err != nil {
 			log.Fatalf("[X] Could not create %s table. Reason: %s", name, err.Error())
 		} else {
 			log.Printf("[OK] Create %s table", name)
 		}
 	} else if name == "asking" {
-		_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + name + " (idUser INT,id INT PRIMARY KEY,idSolv INT,urg TEXT,date TEXT,level TEXT,info TEXT,price TEXT);")
+		_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + name + " (id INT,idask INT PRIMARY KEY,idsolv INT,date TEXT,theme TEXT,info TEXT);")
 		if err != nil {
 			log.Fatalf("[X] Could not create %s table. Reason: %s", name, err.Error())
 		} else {
@@ -692,25 +870,53 @@ func truncateTable(db *sql.DB, name string) {
 	}
 }
 
-// Удаление id
-func deleteUser(db *sql.DB, userID int) {
-	_, err := db.Exec("DELETE FROM bot_user WHERE id = " + strconv.Itoa(userID) + ";")
+// Работа с таблицей int, text
+// В table для userID в колонку column поместить текст value
+// Достать column из table для userID
+func setText(db *sql.DB, table string, userID int, column string, value string) {
+	_, err := db.Exec("UPDATE " + table + " SET " + column + " = '" + value + "' WHERE id = " + strconv.Itoa(userID) + ";")
 	if err != nil {
-		log.Fatalf("[X] Could not delete %d from bot_user table. Reason: %s", userID, err.Error())
-	} else {
-		log.Printf("[OK] Delete %d", userID)
-	}
-	_, err = db.Exec("DELETE FROM asking WHERE idUser = " + strconv.Itoa(userID) + ";")
+		log.Fatalf("[X] Could no update %d. Reason: %s", userID, err.Error())
+	} /*else {
+		log.Printf("[OK] User %d update", userID)
+	}*/
+}
+func getText(db *sql.DB, table string, userID int, column string) (value string) {
+	rows, err := db.Query("SELECT " + column + " FROM " + table + " WHERE id = " + strconv.Itoa(userID) + ";")
+	defer rows.Close()
 	if err != nil {
-		log.Fatalf("[X] Could not delete %d from asking table. Reason: %s", userID, err.Error())
+		log.Fatalf("[X] Could not select %d. Reason: %s", userID, err.Error())
 	} else {
-		log.Printf("[OK] Delete ask %d", userID)
+		for rows.Next() {
+			rows.Scan(&value)
+		}
 	}
+	return value
+}
+func setInt(db *sql.DB, table string, userID int, column string, value int) {
+	_, err := db.Exec("UPDATE " + table + " SET " + column + " = " + strconv.Itoa(value) + " WHERE id = " + strconv.Itoa(userID) + ";")
+	if err != nil {
+		log.Fatalf("[X] Could not update %d. Reason: %s", userID, err.Error())
+	} /*else {
+		log.Printf("[OK] User %d update", userID)
+	}*/
+}
+func getInt(db *sql.DB, table string, userID int, column string) (value int) {
+	rows, err := db.Query("SELECT " + column + " FROM " + table + " WHERE id = " + strconv.Itoa(userID) + ";")
+	defer rows.Close()
+	if err != nil {
+		log.Fatalf("[X] Could not select %d. Reason: %s", userID, err.Error())
+	} else {
+		for rows.Next() {
+			rows.Scan(&value)
+		}
+	}
+	return value
 }
 
-// Проверяем есть ли id в таблице bot_user
+// Логика таблицы
 //
-// have connection
+// Проверяем есть ли id в таблице bot_user
 func checkUserID(db *sql.DB, userID int) bool {
 	rows, err := db.Query("SELECT id FROM bot_user WHERE id = " + strconv.Itoa(userID) + ";")
 	defer rows.Close()
@@ -730,14 +936,14 @@ func newStatus(db *sql.DB, userID int, status string) {
 	_, err := db.Exec("UPDATE bot_user SET status = '" + status + "' WHERE id = " + strconv.Itoa(userID) + ";")
 	if err != nil {
 		log.Fatalf("[X] Could not update status to %d. Reason: %s", userID, err.Error())
-	} else {
+	} /*else {
 		log.Printf("[OK] %d update status to %s", userID, status)
-	}
+	}*/
 }
 
 // Добавление нового пользователя
 func newID(db *sql.DB, userID int) {
-	_, err := db.Exec("INSERT INTO bot_user (id,status) VALUES (" + strconv.Itoa(userID) + ", 'reg1');")
+	_, err := db.Exec("INSERT INTO bot_user (id,status,lastask) VALUES (" + strconv.Itoa(userID) + ", 'reg1', 0);")
 	if err != nil {
 		log.Fatalf("[X] Could not insert newID. Reason: %s", err.Error())
 	} else {
@@ -745,9 +951,25 @@ func newID(db *sql.DB, userID int) {
 	}
 }
 
+// Удаление пользователя
+func deleteUser(db *sql.DB, userID int) {
+	_, err := db.Exec("DELETE FROM bot_user WHERE id = " + strconv.Itoa(userID) + ";")
+	if err != nil {
+		log.Fatalf("[X] Could not delete %d from bot_user table. Reason: %s", userID, err.Error())
+	} else {
+		log.Printf("[OK] Delete user %d", userID)
+	}
+	_, err = db.Exec("DELETE FROM asking WHERE id = " + strconv.Itoa(userID) + ";")
+	if err != nil {
+		log.Fatalf("[X] Could not delete %d from asking table. Reason: %s", userID, err.Error())
+	} else {
+		log.Printf("[OK] Delete ask %d", userID)
+	}
+}
+
 // Добавление новой заявки
 func newAsk(db *sql.DB, userID int, askID int) {
-	_, err := db.Exec("INSERT INTO asking (idUser,id,idSolv) VALUES (" + strconv.Itoa(userID) + ", " + strconv.Itoa(askID) + ", 0);")
+	_, err := db.Exec("INSERT INTO asking (id,idask,idsolv) VALUES (" + strconv.Itoa(userID) + ", " + strconv.Itoa(askID) + ", 0);")
 	if err != nil {
 		log.Fatalf("[X] Could not create new ask %d. Reason: %s", askID, err.Error())
 	} else {
@@ -757,50 +979,17 @@ func newAsk(db *sql.DB, userID int, askID int) {
 	_, err = db.Exec("UPDATE bot_user SET lastask = " + strconv.Itoa(askID) + " WHERE id = " + strconv.Itoa(userID) + ";")
 	if err != nil {
 		log.Fatalf("[X] Could not update lastask user %d. Reason: %s", userID, err.Error())
-	} else {
+	} /*else {
 		log.Printf("[OK] %d update lastask to %d", userID, askID)
-	}
+	}*/
 }
 
-// В table для userID в колонку column поместить текст value
-// Достать column из table для userID
-func setText(db *sql.DB, table string, userID int, column string, value string) {
-	_, err := db.Exec("UPDATE " + table + " SET " + column + " = '" + value + "' WHERE id = " + strconv.Itoa(userID) + ";")
+// Удаление заявки
+func deleteAsk(db *sql.DB, askID int) {
+	_, err := db.Exec("DELETE FROM asking WHERE idask = " + strconv.Itoa(askID) + ";")
 	if err != nil {
-		log.Fatalf("[X] Could no update %d. Reason: %s", userID, err.Error())
+		log.Fatalf("[X] Could not delete %d from asking table. Reason: %s", askID, err.Error())
 	} else {
-		log.Printf("[OK] User %d update", userID)
+		log.Printf("[OK] Delete ask %d", askID)
 	}
-}
-func getText(db *sql.DB, table string, userID int, column string) (value string) {
-	rows, err := db.Query("SELECT " + column + " FROM " + table + " WHERE id = " + strconv.Itoa(userID) + ";")
-	defer rows.Close()
-	if err != nil {
-		log.Fatalf("[X] Could not select %d. Reason: %s", userID, err.Error())
-	} else {
-		for rows.Next() {
-			rows.Scan(&value)
-		}
-	}
-	return value
-}
-func setInt(db *sql.DB, table string, userID int, column string, value int) {
-	_, err := db.Exec("UPDATE " + table + " SET " + column + " = " + strconv.Itoa(value) + " WHERE id = " + strconv.Itoa(userID) + ";")
-	if err != nil {
-		log.Fatalf("[X] Could not update %d. Reason: %s", userID, err.Error())
-	} else {
-		log.Printf("[OK] User %d update", userID)
-	}
-}
-func getInt(db *sql.DB, table string, userID int, column string) (value int) {
-	rows, err := db.Query("SELECT " + column + " FROM " + table + " WHERE id = " + strconv.Itoa(userID) + ";")
-	defer rows.Close()
-	if err != nil {
-		log.Fatalf("[X] Could not select %d. Reason: %s", userID, err.Error())
-	} else {
-		for rows.Next() {
-			rows.Scan(&value)
-		}
-	}
-	return value
 }
