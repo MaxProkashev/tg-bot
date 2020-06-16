@@ -90,37 +90,16 @@ func parseUpdate(update tgbotapi.Update) hookConfig {
 
 // Меню  в зависимости от role
 func menuReply(role string) interface{} {
-	// Решатель
-	if role == "solver" {
-		return tgbotapi.ReplyKeyboardMarkup{
-			Keyboard: [][]tgbotapi.KeyboardButton{
-				tgbotapi.NewKeyboardButtonRow(
-					tgbotapi.NewKeyboardButton("Мой профиль"),
-					tgbotapi.NewKeyboardButton("Мои ответы на заявки"),
-				),
-				tgbotapi.NewKeyboardButtonRow(
-					tgbotapi.NewKeyboardButton("Поиск заявок"),
-				),
-				tgbotapi.NewKeyboardButtonRow(
-					tgbotapi.NewKeyboardButton("Удалить профиль"),
-				),
-			},
-			OneTimeKeyboard: true,
-			ResizeKeyboard:  true,
-		}
-	}
-	// Спрашивающий
 	return tgbotapi.ReplyKeyboardMarkup{
 		Keyboard: [][]tgbotapi.KeyboardButton{
 			tgbotapi.NewKeyboardButtonRow(
 				tgbotapi.NewKeyboardButton("Мой профиль"),
-				tgbotapi.NewKeyboardButton("Мои заявки"),
-			),
-			tgbotapi.NewKeyboardButtonRow(
-				tgbotapi.NewKeyboardButton("Подать заявку"),
-			),
-			tgbotapi.NewKeyboardButtonRow(
 				tgbotapi.NewKeyboardButton("Удалить профиль"),
+			),
+			tgbotapi.NewKeyboardButtonRow(
+				tgbotapi.NewKeyboardButton("Мои ответы"),
+				tgbotapi.NewKeyboardButton("Подать заявку"),
+				tgbotapi.NewKeyboardButton("Мои заявки"),
 			),
 		},
 		OneTimeKeyboard: true,
@@ -367,7 +346,7 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 				setText(db, "bot_user", hook.userID, "work", "Не работает")
 
 				menu := tgbotapi.NewMessage(hook.chatID, "Ура! Вы в системе 🌐")
-				menu.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
+				menu.ReplyMarkup = menuReply()
 				bot.Send(menu)
 			default:
 				bot.Send(tgbotapi.NewMessage(hook.chatID, "Выеберете один из вариантов ответа"))
@@ -383,7 +362,7 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 			
 			
 			menu := tgbotapi.NewMessage(hook.chatID, "Ура! Вы в системе 🌐")
-			menu.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
+			menu.ReplyMarkup = menuReply()
 			bot.Send(menu)
 		default:
 			bot.Send(tgbotapi.NewMessage(hook.chatID, "Введите текст 📝"))
