@@ -506,21 +506,8 @@ func logicTake(hook hookConfig, update tgbotapi.Update) {
 
 // Профиль пользователя
 func userProfile(hook hookConfig, update tgbotapi.Update) {
-	role := getText(db, "bot_user", hook.userID, "role")
-	img := tgbotapi.NewPhotoShare(hook.chatID, getText(db, "bot_user", hook.userID, "img"))
-	bot.Send(img)
-
-	if role == "solver" {
-		bot.Send(tgbotapi.NewMessage(hook.chatID, "Решатель "+getText(db, "bot_user", hook.userID, "name")+" "+getText(db, "bot_user", hook.userID, "surname")))
-		msg := tgbotapi.NewMessage(hook.chatID, "Уровень знаний "+getText(db, "bot_user", hook.userID, "level"))
-		msg.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
-		bot.Send(msg)
-	}
-	if role == "asking" {
-		msg := tgbotapi.NewMessage(hook.chatID, "Спрашиватель "+getText(db, "bot_user", hook.userID, "name")+" "+getText(db, "bot_user", hook.userID, "surname"))
-		msg.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
-		bot.Send(msg)
-	}
+	bot.Send(tgbotapi.NewMessage(hook.chatID, getText(db,"bot_user",hook.userID,"study")))
+	bot.Send(tgbotapi.NewMessage(hook.chatID, getText(db,"bot_user",hook.userID,"study")))
 }
 
 // Заявки спрашивателя
