@@ -107,6 +107,25 @@ func menuReply(role string) interface{} {
 	}
 }
 
+// menu
+func menuBot() interface{} {
+	return tgbotapi.ReplyKeyboardMarkup{
+		Keyboard: [][]tgbotapi.KeyboardButton{
+			tgbotapi.NewKeyboardButtonRow(
+				tgbotapi.NewKeyboardButton("Мой профиль"),
+				tgbotapi.NewKeyboardButton("Удалить профиль"),
+			),
+			tgbotapi.NewKeyboardButtonRow(
+				tgbotapi.NewKeyboardButton("Мои ответы"),
+				tgbotapi.NewKeyboardButton("Подать заявку"),
+				tgbotapi.NewKeyboardButton("Мои заявки"),
+			),
+		},
+		OneTimeKeyboard: true,
+		ResizeKeyboard:  true,
+	}
+}
+
 // Логика регистрации пользователя
 func logicReg(hook hookConfig, update tgbotapi.Update) {
 	switch hook.status {
@@ -253,7 +272,7 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 		switch hook.hasText {
 		case true:
 			newStatus(db, hook.userID, "reg5")
-			temp:=getText(db,"bot_user",hook.userID,"temp")
+			temp := getText(db, "bot_user", hook.userID, "temp")
 			setText(db, "bot_user", hook.userID, "study", "школа "+update.Message.Text+" "+temp)
 
 			msg := tgbotapi.NewMessage(hook.chatID, "Ok, Вы работаете?")
@@ -282,7 +301,7 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 		switch hook.hasText {
 		case true:
 			newStatus(db, hook.userID, "reg5")
-			temp:=getText(db,"bot_user",hook.userID,"temp")
+			temp := getText(db, "bot_user", hook.userID, "temp")
 			setText(db, "bot_user", hook.userID, "study", update.Message.Text+" "+temp)
 
 			msg := tgbotapi.NewMessage(hook.chatID, "Ok, Вы работаете?")
@@ -318,7 +337,7 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 		switch hook.hasText {
 		case true:
 			newStatus(db, hook.userID, "reg5")
-			temp:=getText(db,"bot_user",hook.userID,"temp")
+			temp := getText(db, "bot_user", hook.userID, "temp")
 			setText(db, "bot_user", hook.userID, "study", update.Message.Text+" "+temp)
 
 			msg := tgbotapi.NewMessage(hook.chatID, "Ok, Вы работаете?")
@@ -346,7 +365,7 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 				setText(db, "bot_user", hook.userID, "work", "Не работает")
 
 				menu := tgbotapi.NewMessage(hook.chatID, "Ура! Вы в системе 🌐")
-				menu.ReplyMarkup = menuReply()
+				menu.ReplyMarkup = menuBot()
 				bot.Send(menu)
 			default:
 				bot.Send(tgbotapi.NewMessage(hook.chatID, "Выеберете один из вариантов ответа"))
@@ -359,10 +378,9 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 		case true:
 			newStatus(db, hook.userID, "menu")
 			setText(db, "bot_user", hook.userID, "work", update.Message.Text)
-			
-			
+
 			menu := tgbotapi.NewMessage(hook.chatID, "Ура! Вы в системе 🌐")
-			menu.ReplyMarkup = menuReply()
+			menu.ReplyMarkup = menuBot()
 			bot.Send(menu)
 		default:
 			bot.Send(tgbotapi.NewMessage(hook.chatID, "Введите текст 📝"))
