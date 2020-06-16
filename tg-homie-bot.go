@@ -258,7 +258,7 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 			switch update.CallbackQuery.Data {
 			case "Начальная школа":
 				newStatus(db, hook.userID, "reg4schoolnum")
-				setText(db, "bot_user", hook.userID, "temp", "начальная школа")
+				setText(db, "bot_user", hook.userID, "temp", "начальные классы")
 				bot.Send(tgbotapi.NewMessage(hook.chatID, "Введите номер школы"))
 			default:
 				newStatus(db, hook.userID, "reg4schoolnum")
@@ -507,7 +507,7 @@ func logicTake(hook hookConfig, update tgbotapi.Update) {
 // Профиль пользователя
 func userProfile(hook hookConfig, update tgbotapi.Update) {
 	bot.Send(tgbotapi.NewMessage(hook.chatID, getText(db,"bot_user",hook.userID,"study")))
-	bot.Send(tgbotapi.NewMessage(hook.chatID, getText(db,"bot_user",hook.userID,"study")))
+	bot.Send(tgbotapi.NewMessage(hook.chatID, getText(db,"bot_user",hook.userID,"work")))
 }
 
 // Заявки спрашивателя
