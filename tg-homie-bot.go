@@ -227,6 +227,16 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 			case "Не учусь":
 				newStatus(db, hook.userID, "reg5")
 				setText(db, "bot_user", hook.userID, "study", "Не учится")
+				msg := tgbotapi.NewMessage(hook.chatID, "Ok, Вы работаете?")
+				msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("Да", "Да"),
+					),
+					tgbotapi.NewInlineKeyboardRow(
+						tgbotapi.NewInlineKeyboardButtonData("Нет", "Нет"),
+					),
+				)
+				bot.Send(msg)
 			default:
 				bot.Send(tgbotapi.NewMessage(hook.chatID, "Выеберете один из вариантов ответа"))
 			}
