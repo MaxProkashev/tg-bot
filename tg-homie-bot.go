@@ -469,7 +469,7 @@ func userProfile(hook hookConfig, update tgbotapi.Update) {
 	study := getText(db, "bot_user", hook.userID, "study")
 	work := getText(db, "bot_user", hook.userID, "work")
 
-	htmlText := `<b>`+name+` `+surname+`</b>\n<b>Место учебы:</b> `+study+`\n<b>Место работы:</b> `+work
+	htmlText := `<b>`+name+` `+surname+`</b><br/><b>Место учебы:</b> `+study+`<br/><b>Место работы:</b> `+work
 	menu := tgbotapi.NewMessage(hook.chatID, htmlText)
 	menu.ReplyMarkup = menuBot()
 	menu.ParseMode = tgbotapi.ModeHTML
