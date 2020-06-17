@@ -88,25 +88,6 @@ func parseUpdate(update tgbotapi.Update) hookConfig {
 	return hook
 }
 
-// Меню  в зависимости от role
-func menuReply(role string) interface{} {
-	return tgbotapi.ReplyKeyboardMarkup{
-		Keyboard: [][]tgbotapi.KeyboardButton{
-			tgbotapi.NewKeyboardButtonRow(
-				tgbotapi.NewKeyboardButton("Мой профиль"),
-				tgbotapi.NewKeyboardButton("Удалить профиль"),
-			),
-			tgbotapi.NewKeyboardButtonRow(
-				tgbotapi.NewKeyboardButton("Мои ответы"),
-				tgbotapi.NewKeyboardButton("Подать заявку"),
-				tgbotapi.NewKeyboardButton("Мои заявки"),
-			),
-		},
-		OneTimeKeyboard: true,
-		ResizeKeyboard:  true,
-	}
-}
-
 // menu
 func menuBot() interface{} {
 	return tgbotapi.ReplyKeyboardMarkup{
@@ -434,7 +415,7 @@ func logicAsk(hook hookConfig, update tgbotapi.Update) {
 			setText(db, "asking", id, "date", strconv.Itoa(time.Day())+" "+time.Month().String()+" "+strconv.Itoa(time.Hour())+":"+strconv.Itoa(time.Minute()))
 
 			menu := tgbotapi.NewMessage(hook.chatID, "Заявка принята")
-			menu.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
+			menu.ReplyMarkup = menuBot()
 			bot.Send(menu)
 		default:
 			bot.Send(tgbotapi.NewMessage(hook.chatID, "Пришлите текст"))
@@ -492,7 +473,7 @@ func logicSearch(hook hookConfig, update tgbotapi.Update) {
 		}
 		if flag == false {
 			msg := tgbotapi.NewMessage(hook.chatID, "У вас еще нет заявок")
-			msg.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
+			msg.ReplyMarkup = menuBot()
 			bot.Send(msg)
 			return
 		}
@@ -506,8 +487,8 @@ func logicTake(hook hookConfig, update tgbotapi.Update) {
 
 // Профиль пользователя
 func userProfile(hook hookConfig, update tgbotapi.Update) {
-	bot.Send(tgbotapi.NewMessage(hook.chatID, getText(db,"bot_user",hook.userID,"study")))
-	bot.Send(tgbotapi.NewMessage(hook.chatID, getText(db,"bot_user",hook.userID,"work")))
+	bot.Send(tgbotapi.NewMessage(hook.chatID, getText(db, "bot_user", hook.userID, "study")))
+	bot.Send(tgbotapi.NewMessage(hook.chatID, getText(db, "bot_user", hook.userID, "work")))
 }
 
 // Заявки спрашивателя
@@ -545,13 +526,13 @@ func userAsk(hook hookConfig, update tgbotapi.Update) {
 
 			ask := tgbotapi.NewMessage(hook.chatID, htmlText)
 			ask.ParseMode = tgbotapi.ModeHTML
-			ask.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
+			ask.ReplyMarkup = menuBot()
 			flag = true
 			bot.Send(ask)
 		}
 		if flag == false {
 			msg := tgbotapi.NewMessage(hook.chatID, "У вас еще нет заявок")
-			msg.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
+			msg.ReplyMarkup = menuBot()
 			bot.Send(msg)
 			return
 		}
@@ -593,13 +574,13 @@ func userSolv(hook hookConfig, update tgbotapi.Update) {
 
 			ask := tgbotapi.NewMessage(hook.chatID, htmlText)
 			ask.ParseMode = tgbotapi.ModeHTML
-			ask.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
+			ask.ReplyMarkup = menuBot()
 			flag = true
 			bot.Send(ask)
 		}
 		if flag == false {
 			msg := tgbotapi.NewMessage(hook.chatID, "У вас еще нет заявок")
-			msg.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
+			msg.ReplyMarkup = menuBot()
 			bot.Send(msg)
 			return
 		}
@@ -646,7 +627,7 @@ func webhookHandler(c *gin.Context) {
 				if update.CallbackQuery.Data == "Закончить" {
 					newStatus(db, hook.userID, "menu")
 					menu := tgbotapi.NewMessage(hook.chatID, "Ok")
-					menu.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
+					menu.ReplyMarkup = menuBot()
 					bot.Send(menu)
 				} else if update.CallbackQuery.Data == "Следующая" {
 					logicSearch(hook, update)
@@ -662,7 +643,7 @@ func webhookHandler(c *gin.Context) {
 		if hook.status == "menu" {
 			if hook.hasText == false {
 				menu := tgbotapi.NewMessage(hook.chatID, "Пожалуйста выбирете что то из меню")
-				menu.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
+				menu.ReplyMarkup = menuBot()
 				bot.Send(menu)
 			} else {
 				switch update.Message.Text {
@@ -674,7 +655,7 @@ func webhookHandler(c *gin.Context) {
 				case "Подать заявку":
 					if getText(db, "bot_user", hook.userID, "role") == "solver" {
 						menu := tgbotapi.NewMessage(hook.chatID, "Пожалуйста выбирете что то из меню")
-						menu.ReplyMarkup = menuReply("solver")
+						menu.ReplyMarkup = menuBot()
 						bot.Send(menu)
 					} else {
 						chooseUrg := tgbotapi.NewMessage(hook.chatID, "Эта заявка срочная или нет?")
@@ -697,7 +678,7 @@ func webhookHandler(c *gin.Context) {
 				case "Поиск заявок":
 					if getText(db, "bot_user", hook.userID, "role") == "asking" {
 						menu := tgbotapi.NewMessage(hook.chatID, "Пожалуйста выбирете что то из меню")
-						menu.ReplyMarkup = menuReply("solver")
+						menu.ReplyMarkup = menuBot()
 						bot.Send(menu)
 					} else {
 						newStatus(db, hook.userID, "search")
@@ -705,7 +686,7 @@ func webhookHandler(c *gin.Context) {
 					}
 				default:
 					menu := tgbotapi.NewMessage(hook.chatID, "Пожалуйста выбирете что то из меню")
-					menu.ReplyMarkup = menuReply(getText(db, "bot_user", hook.userID, "role"))
+					menu.ReplyMarkup = menuBot()
 					bot.Send(menu)
 				}
 			}
