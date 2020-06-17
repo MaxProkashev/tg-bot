@@ -369,67 +369,24 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 	}
 }
 
-// Профиль пользователя
-func userProfile(hook hookConfig, update tgbotapi.Update) {
-	name:=getText(db, "bot_user", hook.userID, "name")
-	surname:=getText(db, "bot_user", hook.userID, "surname")
-	study:=getText(db, "bot_user", hook.userID, "study")
-	work:=getText(db, "bot_user", hook.userID, "work")
-
-	htmlText :=`<b>`+name+` `+surname+ `</b>
-<b>Место учебы</b> ` + study + `
-<b>Место работы</b> ` + work
-	menu := tgbotapi.NewMessage(hook.chatID, htmlText)
-	menu.ReplyMarkup = menuBot()
-	menu.ParseMode = tgbotapi.ModeHTML
-	
-	img := tgbotapi.NewPhotoShare(hook.chatID, getText(db, "bot_user", hook.userID, "img"))
-
-	bot.Send(img)
-	bot.Send(menu)
-}
-
 // Логика регистрации заявки
 func logicAsk(hook hookConfig, update tgbotapi.Update) {
 	id := getInt(db, "bot_user", hook.userID, "lastask")
 	switch hook.status {
-	case "ask1": // urg
+	case "ask1": // theme
 		switch hook.hasCallback {
 		case true:
-			if update.CallbackQuery.Data == "Срочная" {
-				newStatus(db, hook.userID, "ask2")
-				setText(db, "asking", id, "urg", "quick")
-			} else if update.CallbackQuery.Data == "Не срочная" {
-				newStatus(db, hook.userID, "ask2")
-				setText(db, "asking", id, "urg", "slow")
-			}
-			bot.Send(tgbotapi.NewMessage(hook.chatID, "Уровень вашей заявки"))
+			newStatus(db, hook.userID, "ask2")
+			setText(db, "asking", id, "theme", update.CallbackQuery.Data)
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Немного опишите вашу заявку"))
 		default:
-			bot.Send(tgbotapi.NewMessage(hook.chatID, "Есть только два типа заявок"))
+			bot.Send(tgbotapi.NewMessage(hook.chatID, "Выберете один из предметов"))
 		}
-	case "ask2": // level
-		switch hook.hasText {
-		case true:
-			newStatus(db, hook.userID, "ask3")
-			setText(db, "asking", id, "level", update.Message.Text)
-			bot.Send(tgbotapi.NewMessage(hook.chatID, "Немного опишите заявку"))
-		default:
-			bot.Send(tgbotapi.NewMessage(hook.chatID, "Пришлите текст"))
-		}
-	case "ask3": // info
-		switch hook.hasText {
-		case true:
-			newStatus(db, hook.userID, "ask4")
-			setText(db, "asking", id, "info", update.Message.Text)
-			bot.Send(tgbotapi.NewMessage(hook.chatID, "Сколько вы готовы заплатить за решение?"))
-		default:
-			bot.Send(tgbotapi.NewMessage(hook.chatID, "Пришлите текст"))
-		}
-	case "ask4": // price date
+	case "ask2": // info
 		switch hook.hasText {
 		case true:
 			newStatus(db, hook.userID, "menu")
-			setText(db, "asking", id, "price", update.Message.Text)
+			setText(db, "asking", id, "info", update.Message.Text)
 
 			time := time.Unix(int64(update.Message.Date), 0).Add(3 * time.Hour)
 			setText(db, "asking", id, "date", strconv.Itoa(time.Day())+" "+time.Month().String()+" "+strconv.Itoa(time.Hour())+":"+strconv.Itoa(time.Minute()))
@@ -505,39 +462,54 @@ func logicTake(hook hookConfig, update tgbotapi.Update) {
 	setInt(db, "asking", id, "idSolv", hook.userID)
 }
 
+// Профиль пользователя
+func userProfile(hook hookConfig, update tgbotapi.Update) {
+	name := getText(db, "bot_user", hook.userID, "name")
+	surname := getText(db, "bot_user", hook.userID, "surname")
+	study := getText(db, "bot_user", hook.userID, "study")
+	work := getText(db, "bot_user", hook.userID, "work")
 
-// Заявки спрашивателя
+	htmlText := `<b>` + name + ` ` + surname + `</b>
+<b>Место учебы:</b> ` + study + `
+<b>Место работы:</b> ` + work
+	menu := tgbotapi.NewMessage(hook.chatID, htmlText)
+	menu.ReplyMarkup = menuBot()
+	menu.ParseMode = tgbotapi.ModeHTML
+
+	img := tgbotapi.NewPhotoShare(hook.chatID, getText(db, "bot_user", hook.userID, "img"))
+
+	bot.Send(img)
+	bot.Send(menu)
+}
+
+// Заявки пользователя
 func userAsk(hook hookConfig, update tgbotapi.Update) {
+	name := getText(db, "bot_user", hook.userID, "name")
+	surname := getText(db, "bot_user", hook.userID, "surname")
+	study := getText(db, "bot_user", hook.userID, "study")
+	work := getText(db, "bot_user", hook.userID, "work")
+
 	flag := false
-	rows, err := db.Query("SELECT urg,date,level,info,price FROM asking WHERE idUser = " + strconv.Itoa(hook.userID) + ";")
+	rows, err := db.Query("SELECT idsolv,date,theme,info FROM asking WHERE idUser = " + strconv.Itoa(hook.userID) + ";")
 	defer rows.Close()
 	if err != nil {
 		log.Fatalf("[X] Could not select %d. Reason: %s", hook.userID, err.Error())
 	} else {
 		for rows.Next() {
 			var (
-				urg   string
+				idsolv   int
 				date  string
-				level string
+				theme string
 				info  string
-				price string
-
-				urgPre string
 			)
-			rows.Scan(&urg, &date, &level, &info, &price)
+			rows.Scan(&idsolv, &date, &theme, &info)
+			htmlText := `<b>От</b>\n<b>`+name+` `+surname+`</b>\n<b>Место учебы:</b> `+study+`\n<b>Место работы:</b> `+work+`\n\n<b>Дата подачи заявки:</b> `+date+`\n<b>Тема:</b> `+theme+`\n<b>Описание:</b> `+info
 
-			if urg == "quick" {
-				urgPre = "Срочная"
+			if idsolv!=0 {
+				htmlText =htmlText+`\n\n<b>Заявку взял:</b> `+strconv.Itoa(idsolv)
+			} else {
+				htmlText =htmlText+`\n\n<b>Заявку еще никто не взял</b>`
 			}
-			if urg == "slow" {
-				urgPre = "Не срочная"
-			}
-
-			htmlText := `<b>` + urgPre + `</b>
-` + date + `
-<b>Уровень</b> ` + level + `
-<b>Информация</b> ` + info + `
-<b>Цена</b> ` + price
 
 			ask := tgbotapi.NewMessage(hook.chatID, htmlText)
 			ask.ParseMode = tgbotapi.ModeHTML
@@ -668,24 +640,21 @@ func webhookHandler(c *gin.Context) {
 					deleteUser(db, hook.userID)
 					bot.Send(tgbotapi.NewMessage(hook.chatID, "Ваш профиль удален, если хотите создать новый профиль введите /start"))
 				case "Подать заявку":
-					if getText(db, "bot_user", hook.userID, "role") == "solver" {
-						menu := tgbotapi.NewMessage(hook.chatID, "Пожалуйста выбирете что то из меню")
-						menu.ReplyMarkup = menuBot()
-						bot.Send(menu)
-					} else {
-						chooseUrg := tgbotapi.NewMessage(hook.chatID, "Эта заявка срочная или нет?")
-						keyboard := tgbotapi.InlineKeyboardMarkup{}
-						var row []tgbotapi.InlineKeyboardButton
-						row = append(row, tgbotapi.NewInlineKeyboardButtonData("Срочная", "Срочная"))
-						row = append(row, tgbotapi.NewInlineKeyboardButtonData("Не срочная", "Не срочная"))
-						keyboard.InlineKeyboard = append(keyboard.InlineKeyboard, row)
-						chooseUrg.ReplyMarkup = keyboard
-						bot.Send(chooseUrg)
-
+						choosetheme := tgbotapi.NewMessage(hook.chatID, "Выберете тему вашей заявки")
+						choosetheme.ReplyMarkup = tgbotapi.InlineKeyboardMarkup(
+							tgbotapi.NewInlineKeyboardRow(
+								tgbotapi.NewInlineKeyboardButtonData("Математика", "Математика"),
+							),
+							tgbotapi.NewInlineKeyboardRow(
+								tgbotapi.NewInlineKeyboardButtonData("Физика", "Физика"),
+							),
+							tgbotapi.NewInlineKeyboardRow(
+								tgbotapi.NewInlineKeyboardButtonData("Русский язык", "Русский язык"),
+							),
+						)
+						bot.Send(choosetheme)
 						newStatus(db, hook.userID, "ask1")
 						newAsk(db, hook.userID, hook.updateID)
-
-					}
 				case "Мои заявки":
 					userAsk(hook, update)
 				case "Мои ответы на заявки":
@@ -809,7 +778,7 @@ func main() {
 //
 // bot_user(id INT PRIMARY KEY,name TEXT,surname TEXT,img TEXT,study TEXT,work TEXT,status TEXT,lastask INT,temp TEXT)
 //
-// asking(id INT,idask INT PRIMARY KEY,idsolv INT,date TEXT,theme TEXT,info TEXT)
+// asking(iduser INT,id INT PRIMARY KEY,idsolv INT,date TEXT,theme TEXT,info TEXT)
 func createTable(db *sql.DB, name string) {
 	if name == "bot_user" {
 		_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + name + " (id INT PRIMARY KEY,name TEXT,surname TEXT,img TEXT,study TEXT,work TEXT,status TEXT,lastask INT,temp TEXT);")
@@ -819,7 +788,7 @@ func createTable(db *sql.DB, name string) {
 			log.Printf("[OK] Create %s table", name)
 		}
 	} else if name == "asking" {
-		_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + name + " (id INT,idask INT PRIMARY KEY,idsolv INT,date TEXT,theme TEXT,info TEXT);")
+		_, err := db.Exec("CREATE TABLE IF NOT EXISTS " + name + " (iduser INT,id INT PRIMARY KEY,idsolv INT,date TEXT,theme TEXT,info TEXT);")
 		if err != nil {
 			log.Fatalf("[X] Could not create %s table. Reason: %s", name, err.Error())
 		} else {
@@ -939,7 +908,7 @@ func deleteUser(db *sql.DB, userID int) {
 	} else {
 		log.Printf("[OK] Delete user %d", userID)
 	}
-	_, err = db.Exec("DELETE FROM asking WHERE id = " + strconv.Itoa(userID) + ";")
+	_, err = db.Exec("DELETE FROM asking WHERE iduser = " + strconv.Itoa(userID) + ";")
 	if err != nil {
 		log.Fatalf("[X] Could not delete %d from asking table. Reason: %s", userID, err.Error())
 	} else {
@@ -949,7 +918,7 @@ func deleteUser(db *sql.DB, userID int) {
 
 // Добавление новой заявки
 func newAsk(db *sql.DB, userID int, askID int) {
-	_, err := db.Exec("INSERT INTO asking (id,idask,idsolv) VALUES (" + strconv.Itoa(userID) + ", " + strconv.Itoa(askID) + ", 0);")
+	_, err := db.Exec("INSERT INTO asking (iduser,id,idsolv) VALUES (" + strconv.Itoa(userID) + ", " + strconv.Itoa(askID) + ", 0);")
 	if err != nil {
 		log.Fatalf("[X] Could not create new ask %d. Reason: %s", askID, err.Error())
 	} else {
@@ -966,7 +935,7 @@ func newAsk(db *sql.DB, userID int, askID int) {
 
 // Удаление заявки
 func deleteAsk(db *sql.DB, askID int) {
-	_, err := db.Exec("DELETE FROM asking WHERE idask = " + strconv.Itoa(askID) + ";")
+	_, err := db.Exec("DELETE FROM asking WHERE id = " + strconv.Itoa(askID) + ";")
 	if err != nil {
 		log.Fatalf("[X] Could not delete %d from asking table. Reason: %s", askID, err.Error())
 	} else {
