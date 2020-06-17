@@ -573,15 +573,13 @@ func userSolv(hook hookConfig, update tgbotapi.Update) {
 			var (
 				iduser int
 				id     int
-				idsolv int
 				date   string
 				theme  string
 				info   string
 			)
-			rows.Scan(&iduser, &id, &idsolv, &date, &theme, &info)
+			rows.Scan(&iduser, &id, &date, &theme, &info)
 			log.Println(iduser)
 			log.Println(id)
-			log.Println(idsolv)
 			log.Println(date)
 			log.Println(theme)
 			log.Println(info)
