@@ -369,6 +369,26 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 	}
 }
 
+// Профиль пользователя
+func userProfile(hook hookConfig, update tgbotapi.Update) {
+	name:=getText(db, "bot_user", hook.userID, "name")
+	surname:=getText(db, "bot_user", hook.userID, "surname")
+	study:=getText(db, "bot_user", hook.userID, "study")
+	work:=getText(db, "bot_user", hook.userID, "work")
+
+	htmlText :=`<b>`+name+` `+surname+ `</b>
+<b>Место учебы</b> ` + study + `
+<b>Место работы</b> ` + work
+	menu := tgbotapi.NewMessage(hook.chatID, htmlText)
+	menu.ReplyMarkup = menuBot()
+	menu.ParseMode = tgbotapi.ModeHTML
+	
+	img := tgbotapi.NewPhotoShare(hook.chatID, getText(db, "bot_user", hook.userID, "img"))
+
+	bot.Send(img)
+	bot.Send(menu)
+}
+
 // Логика регистрации заявки
 func logicAsk(hook hookConfig, update tgbotapi.Update) {
 	id := getInt(db, "bot_user", hook.userID, "lastask")
@@ -485,11 +505,6 @@ func logicTake(hook hookConfig, update tgbotapi.Update) {
 	setInt(db, "asking", id, "idSolv", hook.userID)
 }
 
-// Профиль пользователя
-func userProfile(hook hookConfig, update tgbotapi.Update) {
-	bot.Send(tgbotapi.NewMessage(hook.chatID, getText(db, "bot_user", hook.userID, "study")))
-	bot.Send(tgbotapi.NewMessage(hook.chatID, getText(db, "bot_user", hook.userID, "work")))
-}
 
 // Заявки спрашивателя
 func userAsk(hook hookConfig, update tgbotapi.Update) {
