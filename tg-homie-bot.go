@@ -519,16 +519,28 @@ func userAsk(hook hookConfig, update tgbotapi.Update) {
 				info   string
 			)
 			rows.Scan(&idsolv, &date, &theme, &info)
-			htmlText := `<b>От</b>\n<b>` + name + ` ` + surname + `</b>\n<b>Место учебы:</b> ` + study + `\n<b>Место работы:</b> ` + work + `\n\n<b>Дата подачи заявки:</b> ` + date + `\n<b>Тема:</b> ` + theme + `\n<b>Описание:</b> ` + info
-
+			text := fmt.Sprintf(
+				"*%s %s*\n"+
+					"*Место учебы:* %s\n"+
+					"*Место работы:* %s\n\n"+
+					"*Дата подачи заявки:* %s\n"+
+					"*Тема:* %s\n"+
+					"*Описание:* %s\n",
+				name, surname,
+				study,
+				work,
+				date,
+				theme,
+				info,
+			)
 			if idsolv != 0 {
-				htmlText = htmlText + `\n\n<b>Заявку взял:</b> ` + strconv.Itoa(idsolv)
+				text = text + "\n*Заявку взял:* " + strconv.Itoa(idsolv)
 			} else {
-				htmlText = htmlText + `\n\n<b>Заявку еще никто не взял</b>`
+				text = text + "\n*Заявку еще никто не взял*"
 			}
 
-			ask := tgbotapi.NewMessage(hook.chatID, htmlText)
-			ask.ParseMode = tgbotapi.ModeHTML
+			ask := tgbotapi.NewMessage(hook.chatID, text)
+			ask.ParseMode = tgbotapi.ModeMarkdown
 			ask.ReplyMarkup = menuBot()
 			flag = true
 			bot.Send(ask)
