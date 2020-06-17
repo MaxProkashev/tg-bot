@@ -459,7 +459,7 @@ func logicSearch(hook hookConfig, update tgbotapi.Update) {
 			)
 
 			NextEnd := tgbotapi.NewMessage(hook.chatID, text)
-			NextEnd.ParseMode = tgbotapi.ModeHTML
+			NextEnd.ParseMode = tgbotapi.ModeMarkdown
 			keyboard := tgbotapi.InlineKeyboardMarkup{}
 			var row []tgbotapi.InlineKeyboardButton
 			row = append(row, tgbotapi.NewInlineKeyboardButtonData("Взять", "Взять"))
@@ -603,7 +603,7 @@ func userSolv(hook hookConfig, update tgbotapi.Update) {
 			)
 
 			ask := tgbotapi.NewMessage(hook.chatID, text)
-			ask.ParseMode = tgbotapi.ModeHTML
+			ask.ParseMode = tgbotapi.ModeMarkdown
 			ask.ReplyMarkup = menuBot()
 			flag = true
 			bot.Send(ask)
@@ -722,9 +722,9 @@ func webhookHandler(c *gin.Context) {
 			bot.Send(tgbotapi.NewMessage(hook.chatID, "Пожалуйста, начните с команды /start"))
 		} else if update.Message.Command() == "start" {
 			// Приветствие до регистрации
-			htmlText := `(Придумать приветствие)`
+			htmlText := "(Придумать приветствие)"
 			msg := tgbotapi.NewMessage(hook.chatID, htmlText)
-			msg.ParseMode = tgbotapi.ModeHTML
+			msg.ParseMode = tgbotapi.ModeMarkdown
 			bot.Send(msg)
 
 			// new id
