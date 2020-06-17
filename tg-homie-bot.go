@@ -230,7 +230,7 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 				bot.Send(msg)
 			case "Не учусь":
 				newStatus(db, hook.userID, "reg5")
-				setText(db, "bot_user", hook.userID, "study", "Не учится")
+				setText(db, "bot_user", hook.userID, "study", "не учится")
 				msg := tgbotapi.NewMessage(hook.chatID, "Ok, Вы работаете?")
 				msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 					tgbotapi.NewInlineKeyboardRow(
@@ -357,7 +357,7 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 				bot.Send(tgbotapi.NewMessage(hook.chatID, "Кем Вы работаете?"))
 			case "Нет":
 				newStatus(db, hook.userID, "menu")
-				setText(db, "bot_user", hook.userID, "work", "Не работает")
+				setText(db, "bot_user", hook.userID, "work", "не работает")
 
 				menu := tgbotapi.NewMessage(hook.chatID, "Ура! Вы в системе 🌐")
 				menu.ReplyMarkup = menuBot()
@@ -425,12 +425,12 @@ func logicSearch(hook hookConfig, update tgbotapi.Update) {
 	} else {
 		for rows.Next() {
 			var (
-				iduser	int
-				id		int
-				idsolv	int
-				date	string
-				theme	string
-				info	string
+				iduser int
+				id     int
+				idsolv int
+				date   string
+				theme  string
+				info   string
 			)
 			rows.Scan(&iduser, &id, &idsolv, &date, &theme, &info)
 			setInt(db, "bot_user", hook.userID, "lastask", id)
@@ -442,13 +442,13 @@ func logicSearch(hook hookConfig, update tgbotapi.Update) {
 
 			text := fmt.Sprintf(
 				"*Информация о том кто подал заявку*\n"+
-				"%s %s\n"+
-				"*Место учебы:* %s\n"+
-				"*Место работы:* %s\n\n"+
-				"*Информация о заявке:*\n"+
-				"*Дата подачи заявки:* %s\n"+
-				"*Тема:* %s\n"+
-				"*Описание:* %s\n",
+					"%s %s\n"+
+					"*Место учебы:* %s\n"+
+					"*Место работы:* %s\n\n"+
+					"*Информация о заявке:*\n"+
+					"*Дата подачи заявки:* %s\n"+
+					"*Тема:* %s\n"+
+					"*Описание:* %s\n",
 				name,
 				surname,
 				study,
@@ -472,6 +472,7 @@ func logicSearch(hook hookConfig, update tgbotapi.Update) {
 			return
 		}
 		if flag == false {
+			newStatus(db, hook.userID, "menu")
 			msg := tgbotapi.NewMessage(hook.chatID, "Свободные заявки кончились")
 			msg.ReplyMarkup = menuBot()
 			bot.Send(msg)
@@ -533,8 +534,8 @@ func userAsk(hook hookConfig, update tgbotapi.Update) {
 			rows.Scan(&idsolv, &date, &theme, &info)
 			text := fmt.Sprintf(
 				"*Дата подачи заявки:* %s\n"+
-				"*Тема:* %s\n"+
-				"*Описание:* %s\n",
+					"*Тема:* %s\n"+
+					"*Описание:* %s\n",
 				date,
 				theme,
 				info,
@@ -570,12 +571,12 @@ func userSolv(hook hookConfig, update tgbotapi.Update) {
 	} else {
 		for rows.Next() {
 			var (
-				iduser	int
-				id		int
-				idsolv	int
-				date	string
-				theme	string
-				info	string
+				iduser int
+				id     int
+				idsolv int
+				date   string
+				theme  string
+				info   string
 			)
 			rows.Scan(&iduser, &id, &idsolv, &date, &theme, &info)
 
@@ -586,13 +587,13 @@ func userSolv(hook hookConfig, update tgbotapi.Update) {
 
 			text := fmt.Sprintf(
 				"*Информация о том кто подал заявку*\n"+
-				"%s %s\n"+
-				"*Место учебы:* %s\n"+
-				"*Место работы:* %s\n\n"+
-				"*Информация о заявке:*\n"+
-				"*Дата подачи заявки:* %s\n"+
-				"*Тема:* %s\n"+
-				"*Описание:* %s\n",
+					"%s %s\n"+
+					"*Место учебы:* %s\n"+
+					"*Место работы:* %s\n\n"+
+					"*Информация о заявке:*\n"+
+					"*Дата подачи заявки:* %s\n"+
+					"*Тема:* %s\n"+
+					"*Описание:* %s\n",
 				name,
 				surname,
 				study,
