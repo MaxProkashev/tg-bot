@@ -519,7 +519,7 @@ func userAsk(hook hookConfig, update tgbotapi.Update) {
 	//work := getText(db, "bot_user", hook.userID, "work")
 
 	flag := false
-	rows, err := db.Query("SELECT idsolv,date,theme,info FROM asking WHERE idUser = " + strconv.Itoa(hook.userID) + ";")
+	rows, err := db.Query("SELECT idsolv,date,theme,info FROM asking WHERE iduser = " + strconv.Itoa(hook.userID) + ";")
 	defer rows.Close()
 	if err != nil {
 		log.Fatalf("[X] Could not select %d. Reason: %s", hook.userID, err.Error())
@@ -793,8 +793,8 @@ func main() {
 	//truncateTable(db, "bot_user")				// Удаление всех записей != Удаление таблицы
 	//truncateTable(db, "asking")
 	//
-	dropTable(db, "bot_user") // Удаление таблицы
-	dropTable(db, "asking")
+	//dropTable(db, "bot_user") // Удаление таблицы
+	//dropTable(db, "asking")
 	//
 	//time.Sleep(2 * time.Second) // Спячка на 2 секунд
 	//
