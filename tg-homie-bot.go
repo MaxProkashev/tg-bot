@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -350,7 +351,7 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 			switch update.CallbackQuery.Data {
 			case "Да":
 				newStatus(db, hook.userID, "reg5work")
-				bot.Send(tgbotapi.NewMessage(hook.chatID, "Где вы работаете?"))
+				bot.Send(tgbotapi.NewMessage(hook.chatID, "Кем Вы работаете?"))
 			case "Нет":
 				newStatus(db, hook.userID, "menu")
 				setText(db, "bot_user", hook.userID, "work", "Не работает")
@@ -479,10 +480,17 @@ func userProfile(hook hookConfig, update tgbotapi.Update) {
 	study := getText(db, "bot_user", hook.userID, "study")
 	work := getText(db, "bot_user", hook.userID, "work")
 
-	htmlText := `<b>`+name+` `+surname+`</b><br/><b>Место учебы:</b> `+study+`<br/><b>Место работы:</b> `+work
-	menu := tgbotapi.NewMessage(hook.chatID, htmlText)
+	text := fmt.Sprintf(
+		"*%s %s*\n"+
+			"*Место учебы:* %s\n"+
+			"*Место работы:* %s\n",
+		name, surname,
+		study,
+		work,
+	)
+	menu := tgbotapi.NewMessage(hook.chatID, text)
 	menu.ReplyMarkup = menuBot()
-	menu.ParseMode = tgbotapi.ModeHTML
+	menu.ParseMode = tgbotapi.ModeMarkdown
 
 	img := tgbotapi.NewPhotoShare(hook.chatID, getText(db, "bot_user", hook.userID, "img"))
 
@@ -505,18 +513,18 @@ func userAsk(hook hookConfig, update tgbotapi.Update) {
 	} else {
 		for rows.Next() {
 			var (
-				idsolv   int
-				date  string
-				theme string
-				info  string
+				idsolv int
+				date   string
+				theme  string
+				info   string
 			)
 			rows.Scan(&idsolv, &date, &theme, &info)
-			htmlText := `<b>От</b>\n<b>`+name+` `+surname+`</b>\n<b>Место учебы:</b> `+study+`\n<b>Место работы:</b> `+work+`\n\n<b>Дата подачи заявки:</b> `+date+`\n<b>Тема:</b> `+theme+`\n<b>Описание:</b> `+info
+			htmlText := `<b>От</b>\n<b>` + name + ` ` + surname + `</b>\n<b>Место учебы:</b> ` + study + `\n<b>Место работы:</b> ` + work + `\n\n<b>Дата подачи заявки:</b> ` + date + `\n<b>Тема:</b> ` + theme + `\n<b>Описание:</b> ` + info
 
-			if idsolv!=0 {
-				htmlText =htmlText+`\n\n<b>Заявку взял:</b> `+strconv.Itoa(idsolv)
+			if idsolv != 0 {
+				htmlText = htmlText + `\n\n<b>Заявку взял:</b> ` + strconv.Itoa(idsolv)
 			} else {
-				htmlText =htmlText+`\n\n<b>Заявку еще никто не взял</b>`
+				htmlText = htmlText + `\n\n<b>Заявку еще никто не взял</b>`
 			}
 
 			ask := tgbotapi.NewMessage(hook.chatID, htmlText)
@@ -648,21 +656,21 @@ func webhookHandler(c *gin.Context) {
 					deleteUser(db, hook.userID)
 					bot.Send(tgbotapi.NewMessage(hook.chatID, "Ваш профиль удален, если хотите создать новый профиль введите /start"))
 				case "Подать заявку":
-						choosetheme := tgbotapi.NewMessage(hook.chatID, "Выберете тему вашей заявки")
-						choosetheme.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
-							tgbotapi.NewInlineKeyboardRow(
-								tgbotapi.NewInlineKeyboardButtonData("Математика", "Математика"),
-							),
-							tgbotapi.NewInlineKeyboardRow(
-								tgbotapi.NewInlineKeyboardButtonData("Физика", "Физика"),
-							),
-							tgbotapi.NewInlineKeyboardRow(
-								tgbotapi.NewInlineKeyboardButtonData("Русский язык", "Русский язык"),
-							),
-						)
-						bot.Send(choosetheme)
-						newStatus(db, hook.userID, "ask1")
-						newAsk(db, hook.userID, hook.updateID)
+					choosetheme := tgbotapi.NewMessage(hook.chatID, "Выберете тему вашей заявки")
+					choosetheme.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+						tgbotapi.NewInlineKeyboardRow(
+							tgbotapi.NewInlineKeyboardButtonData("Математика", "Математика"),
+						),
+						tgbotapi.NewInlineKeyboardRow(
+							tgbotapi.NewInlineKeyboardButtonData("Физика", "Физика"),
+						),
+						tgbotapi.NewInlineKeyboardRow(
+							tgbotapi.NewInlineKeyboardButtonData("Русский язык", "Русский язык"),
+						),
+					)
+					bot.Send(choosetheme)
+					newStatus(db, hook.userID, "ask1")
+					newAsk(db, hook.userID, hook.updateID)
 				case "Мои заявки":
 					userAsk(hook, update)
 				case "Мои ответы на заявки":
