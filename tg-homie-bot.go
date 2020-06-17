@@ -102,6 +102,9 @@ func menuBot() interface{} {
 				tgbotapi.NewKeyboardButton("Подать заявку"),
 				tgbotapi.NewKeyboardButton("Мои заявки"),
 			),
+			tgbotapi.NewKeyboardButtonRow(
+				tgbotapi.NewKeyboardButton("Поиск заявок"),
+			),
 		},
 		OneTimeKeyboard: true,
 		ResizeKeyboard:  true,
@@ -415,38 +418,47 @@ func logicAsk(hook hookConfig, update tgbotapi.Update) {
 func logicSearch(hook hookConfig, update tgbotapi.Update) {
 	flag := false
 	id := getInt(db, "bot_user", hook.userID, "lastask")
-	rows, err := db.Query("SELECT id,urg,date,level,info,price FROM asking WHERE id <> " + strconv.Itoa(id) + " AND idSolv = 0;")
+	rows, err := db.Query("SELECT iduser,id,idsolv,date,theme,info FROM asking WHERE id <> " + strconv.Itoa(id) + " AND idsolv = 0;")
 	defer rows.Close()
 	if err != nil {
 		log.Fatalf("[X] Could not select %d. Reason: %s", hook.userID, err.Error())
 	} else {
 		for rows.Next() {
 			var (
-				id    int
-				urg   string
-				date  string
-				level string
-				info  string
-				price string
-
-				urgPre string
+				iduser	int
+				id		int
+				idsolv	int
+				date	string
+				theme	string
+				info	string
 			)
-			rows.Scan(&id, &urg, &date, &level, &info, &price)
-
+			rows.Scan(&iduser, &id, &idsolv, &date, &theme, &info)
 			setInt(db, "bot_user", hook.userID, "lastask", id)
-			if urg == "quick" {
-				urgPre = "Срочная"
-			}
-			if urg == "slow" {
-				urgPre = "Не срочная"
-			}
-			htmlText := `<b>` + urgPre + `</b>
-	` + date + `
-	<b>Уровень</b> ` + level + `
-	<b>Информация</b> ` + info + `
-	<b>Цена</b> ` + price
 
-			NextEnd := tgbotapi.NewMessage(hook.chatID, htmlText)
+			name := getText(db, "bot_user", iduser, "name")
+			surname := getText(db, "bot_user", iduser, "surname")
+			study := getText(db, "bot_user", iduser, "study")
+			work := getText(db, "bot_user", iduser, "work")
+
+			text := fmt.Sprintf(
+				"*Информация о том кто подал заявку*\n"+
+				"%s %s\n"+
+				"*Место учебы:* %s\n"+
+				"*Место работы:* %s\n\n"+
+				"*Информация о заявке:*\n"+
+				"*Дата подачи заявки:* %s\n"+
+				"*Тема:* %s\n"+
+				"*Описание:* %s\n",
+				name,
+				surname,
+				study,
+				work,
+				date,
+				theme,
+				info,
+			)
+
+			NextEnd := tgbotapi.NewMessage(hook.chatID, text)
 			NextEnd.ParseMode = tgbotapi.ModeHTML
 			keyboard := tgbotapi.InlineKeyboardMarkup{}
 			var row []tgbotapi.InlineKeyboardButton
@@ -460,7 +472,7 @@ func logicSearch(hook hookConfig, update tgbotapi.Update) {
 			return
 		}
 		if flag == false {
-			msg := tgbotapi.NewMessage(hook.chatID, "У вас еще нет заявок")
+			msg := tgbotapi.NewMessage(hook.chatID, "Свободные заявки кончились")
 			msg.ReplyMarkup = menuBot()
 			bot.Send(msg)
 			return
@@ -470,7 +482,7 @@ func logicSearch(hook hookConfig, update tgbotapi.Update) {
 
 func logicTake(hook hookConfig, update tgbotapi.Update) {
 	id := getInt(db, "bot_user", hook.userID, "lastask")
-	setInt(db, "asking", id, "idSolv", hook.userID)
+	setInt(db, "asking", id, "idsolv", hook.userID)
 }
 
 // Профиль пользователя
@@ -500,10 +512,10 @@ func userProfile(hook hookConfig, update tgbotapi.Update) {
 
 // Заявки пользователя
 func userAsk(hook hookConfig, update tgbotapi.Update) {
-	name := getText(db, "bot_user", hook.userID, "name")
-	surname := getText(db, "bot_user", hook.userID, "surname")
-	study := getText(db, "bot_user", hook.userID, "study")
-	work := getText(db, "bot_user", hook.userID, "work")
+	//name := getText(db, "bot_user", hook.userID, "name")
+	//surname := getText(db, "bot_user", hook.userID, "surname")
+	//study := getText(db, "bot_user", hook.userID, "study")
+	//work := getText(db, "bot_user", hook.userID, "work")
 
 	flag := false
 	rows, err := db.Query("SELECT idsolv,date,theme,info FROM asking WHERE idUser = " + strconv.Itoa(hook.userID) + ";")
@@ -520,15 +532,9 @@ func userAsk(hook hookConfig, update tgbotapi.Update) {
 			)
 			rows.Scan(&idsolv, &date, &theme, &info)
 			text := fmt.Sprintf(
-				"*%s %s*\n"+
-					"*Место учебы:* %s\n"+
-					"*Место работы:* %s\n\n"+
-					"*Дата подачи заявки:* %s\n"+
-					"*Тема:* %s\n"+
-					"*Описание:* %s\n",
-				name, surname,
-				study,
-				work,
+				"*Дата подачи заявки:* %s\n"+
+				"*Тема:* %s\n"+
+				"*Описание:* %s\n",
 				date,
 				theme,
 				info,
@@ -554,47 +560,56 @@ func userAsk(hook hookConfig, update tgbotapi.Update) {
 	}
 }
 
-// Заявки спрашивателя
+// Заявки которые взял пользователь
 func userSolv(hook hookConfig, update tgbotapi.Update) {
 	flag := false
-	rows, err := db.Query("SELECT urg,date,level,info,price FROM asking WHERE idSolv = " + strconv.Itoa(hook.userID) + ";")
+	rows, err := db.Query("SELECT iduser,id,date,theme,info FROM asking WHERE idsolv = " + strconv.Itoa(hook.userID) + ";")
 	defer rows.Close()
 	if err != nil {
 		log.Fatalf("[X] Could not select %d. Reason: %s", hook.userID, err.Error())
 	} else {
 		for rows.Next() {
 			var (
-				urg   string
-				date  string
-				level string
-				info  string
-				price string
-
-				urgPre string
+				iduser	int
+				id		int
+				idsolv	int
+				date	string
+				theme	string
+				info	string
 			)
-			rows.Scan(&urg, &date, &level, &info, &price)
+			rows.Scan(&iduser, &id, &idsolv, &date, &theme, &info)
 
-			if urg == "quick" {
-				urgPre = "Срочная"
-			}
-			if urg == "slow" {
-				urgPre = "Не срочная"
-			}
+			name := getText(db, "bot_user", iduser, "name")
+			surname := getText(db, "bot_user", iduser, "surname")
+			study := getText(db, "bot_user", iduser, "study")
+			work := getText(db, "bot_user", iduser, "work")
 
-			htmlText := `<b>` + urgPre + `</b>
-` + date + `
-<b>Уровень</b> ` + level + `
-<b>Информация</b> ` + info + `
-<b>Цена</b> ` + price
+			text := fmt.Sprintf(
+				"*Информация о том кто подал заявку*\n"+
+				"%s %s\n"+
+				"*Место учебы:* %s\n"+
+				"*Место работы:* %s\n\n"+
+				"*Информация о заявке:*\n"+
+				"*Дата подачи заявки:* %s\n"+
+				"*Тема:* %s\n"+
+				"*Описание:* %s\n",
+				name,
+				surname,
+				study,
+				work,
+				date,
+				theme,
+				info,
+			)
 
-			ask := tgbotapi.NewMessage(hook.chatID, htmlText)
+			ask := tgbotapi.NewMessage(hook.chatID, text)
 			ask.ParseMode = tgbotapi.ModeHTML
 			ask.ReplyMarkup = menuBot()
 			flag = true
 			bot.Send(ask)
 		}
 		if flag == false {
-			msg := tgbotapi.NewMessage(hook.chatID, "У вас еще нет заявок")
+			msg := tgbotapi.NewMessage(hook.chatID, "Вы не взяли ни одной заявки")
 			msg.ReplyMarkup = menuBot()
 			bot.Send(msg)
 			return
@@ -648,10 +663,11 @@ func webhookHandler(c *gin.Context) {
 					logicSearch(hook, update)
 				} else if update.CallbackQuery.Data == "Взять" {
 					logicTake(hook, update)
+					bot.Send(tgbotapi.NewMessage(hook.chatID, "Заявка теперь ваша"))
 					logicSearch(hook, update)
 				}
 			default:
-				bot.Send(tgbotapi.NewMessage(hook.chatID, "Нажимайте не кнопочки"))
+				bot.Send(tgbotapi.NewMessage(hook.chatID, "Выберете один из вариантов ответа"))
 			}
 		}
 
@@ -685,17 +701,11 @@ func webhookHandler(c *gin.Context) {
 					newAsk(db, hook.userID, hook.updateID)
 				case "Мои заявки":
 					userAsk(hook, update)
-				case "Мои ответы на заявки":
+				case "Мои ответы":
 					userSolv(hook, update)
 				case "Поиск заявок":
-					if getText(db, "bot_user", hook.userID, "role") == "asking" {
-						menu := tgbotapi.NewMessage(hook.chatID, "Пожалуйста выбирете что то из меню")
-						menu.ReplyMarkup = menuBot()
-						bot.Send(menu)
-					} else {
-						newStatus(db, hook.userID, "search")
-						logicSearch(hook, update)
-					}
+					newStatus(db, hook.userID, "search")
+					logicSearch(hook, update)
 				default:
 					menu := tgbotapi.NewMessage(hook.chatID, "Пожалуйста выбирете что то из меню")
 					menu.ReplyMarkup = menuBot()
