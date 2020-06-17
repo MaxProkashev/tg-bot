@@ -469,9 +469,7 @@ func userProfile(hook hookConfig, update tgbotapi.Update) {
 	study := getText(db, "bot_user", hook.userID, "study")
 	work := getText(db, "bot_user", hook.userID, "work")
 
-	htmlText := `<b>` + name + ` ` + surname + `</b>
-<b>Место учебы:</b> ` + study + `
-<b>Место работы:</b> ` + work
+	htmlText := `<b>`+name+` `+surname+`</b>\n<b>Место учебы:</b> `+study+`\n<b>Место работы:</b> `+work
 	menu := tgbotapi.NewMessage(hook.chatID, htmlText)
 	menu.ReplyMarkup = menuBot()
 	menu.ParseMode = tgbotapi.ModeHTML
@@ -641,7 +639,7 @@ func webhookHandler(c *gin.Context) {
 					bot.Send(tgbotapi.NewMessage(hook.chatID, "Ваш профиль удален, если хотите создать новый профиль введите /start"))
 				case "Подать заявку":
 						choosetheme := tgbotapi.NewMessage(hook.chatID, "Выберете тему вашей заявки")
-						choosetheme.ReplyMarkup = tgbotapi.InlineKeyboardMarkup(
+						choosetheme.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
 							tgbotapi.NewInlineKeyboardRow(
 								tgbotapi.NewInlineKeyboardButtonData("Математика", "Математика"),
 							),
