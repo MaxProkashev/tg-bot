@@ -150,7 +150,7 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 					tgbotapi.NewInlineKeyboardButtonData("В университете", "В университете"),
 				),
 				tgbotapi.NewInlineKeyboardRow(
-					tgbotapi.NewInlineKeyboardButtonData("Не учусь", "Не учусь"),
+					tgbotapi.NewInlineKeyboardButtonData("Нет", "Нет"),
 				),
 			)
 			bot.Send(msg)
@@ -228,7 +228,7 @@ func logicReg(hook hookConfig, update tgbotapi.Update) {
 					),
 				)
 				bot.Send(msg)
-			case "Не учусь":
+			case "Нет":
 				newStatus(db, hook.userID, "reg5")
 				setText(db, "bot_user", hook.userID, "study", "не учится")
 				msg := tgbotapi.NewMessage(hook.chatID, "Ok, Вы работаете?")
@@ -418,7 +418,7 @@ func logicAsk(hook hookConfig, update tgbotapi.Update) {
 func logicSearch(hook hookConfig, update tgbotapi.Update) {
 	flag := false
 	id := getInt(db, "bot_user", hook.userID, "lastask")
-	rows, err := db.Query("SELECT iduser,id,idsolv,date,theme,info FROM asking WHERE id <> " + strconv.Itoa(id) + " AND idsolv = 0;")
+	rows, err := db.Query("SELECT iduser,id,idsolv,date,theme,info FROM asking WHERE id <> " + strconv.Itoa(id) + " AND idsolv = 0 AND iduser <> " + strconv.Itoa(hook.userID) + ";")
 	defer rows.Close()
 	if err != nil {
 		log.Fatalf("[X] Could not select %d. Reason: %s", hook.userID, err.Error())
@@ -441,7 +441,7 @@ func logicSearch(hook hookConfig, update tgbotapi.Update) {
 			work := getText(db, "bot_user", iduser, "work")
 
 			text := fmt.Sprintf(
-				"*Информация о том кто подал заявку*\n"+
+				"*Информация о том кто подал заявку:*\n"+
 					"%s %s\n"+
 					"*Место учебы:* %s\n"+
 					"*Место работы:* %s\n\n"+
