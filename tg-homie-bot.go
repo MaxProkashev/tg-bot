@@ -579,6 +579,12 @@ func userSolv(hook hookConfig, update tgbotapi.Update) {
 				info   string
 			)
 			rows.Scan(&iduser, &id, &idsolv, &date, &theme, &info)
+			log.Println(iduser)
+			log.Println(id)
+			log.Println(idsolv)
+			log.Println(date)
+			log.Println(theme)
+			log.Println(info)
 
 			name := getText(db, "bot_user", iduser, "name")
 			surname := getText(db, "bot_user", iduser, "surname")
@@ -706,7 +712,11 @@ func webhookHandler(c *gin.Context) {
 					userSolv(hook, update)
 				case "Поиск заявок":
 					newStatus(db, hook.userID, "search")
-					logicSearch(hook, update)
+					if getInt(db, "bot_user", hook.userID, "lastask")==0{
+						logicSearch(hook, update)
+					} else {
+						logicSearch(hook, update)
+					}
 				default:
 					menu := tgbotapi.NewMessage(hook.chatID, "Пожалуйста выбирете что то из меню")
 					menu.ReplyMarkup = menuBot()
