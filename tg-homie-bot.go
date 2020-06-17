@@ -541,7 +541,7 @@ func userAsk(hook hookConfig, update tgbotapi.Update) {
 				info,
 			)
 			if idsolv != 0 {
-				text = text + "\n*Заявку взял:* " + strconv.Itoa(idsolv)
+				text = text + "\n*Заявку взял:* " + getText(db, "bot_user", idsolv, "name") + " " +getText(db, "bot_user", idsolv, "surname")
 			} else {
 				text = text + "\n*Заявку еще никто не взял*"
 			}
