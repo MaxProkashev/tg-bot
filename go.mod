@@ -1,6 +1,6 @@
-module github.com/heroku/tg-homie-bot
+module tg-bot
 
-go 1.12.17
+go 1.14
 
 require (
 	github.com/gin-gonic/gin v1.6.3
