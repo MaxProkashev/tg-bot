@@ -642,7 +642,7 @@ func webhookHandler(c *gin.Context) {
 	}
 	//
 	//
-	// Основная инфа об update
+	// Основная инфа update
 	hook := parseUpdate(update)
 	hook.inTable = checkUserID(db, hook.userID)
 	//
