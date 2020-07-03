@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 
 	_ "github.com/heroku/x/hmetrics/onload"
 	_ "github.com/lib/pq"
@@ -541,7 +541,7 @@ func userAsk(hook hookConfig, update tgbotapi.Update) {
 				info,
 			)
 			if idsolv != 0 {
-				text = text + "\n*Заявку взял:* " + getText(db, "bot_user", idsolv, "name") + " " +getText(db, "bot_user", idsolv, "surname")
+				text = text + "\n*Заявку взял:* " + getText(db, "bot_user", idsolv, "name") + " " + getText(db, "bot_user", idsolv, "surname")
 			} else {
 				text = text + "\n*Заявку еще никто не взял*"
 			}
@@ -622,7 +622,7 @@ func userSolv(hook hookConfig, update tgbotapi.Update) {
 	}
 }
 
-// Основная ручка запроса
+// Основная ручка запроса пользователя
 func webhookHandler(c *gin.Context) {
 	defer c.Request.Body.Close()
 
@@ -710,7 +710,7 @@ func webhookHandler(c *gin.Context) {
 					userSolv(hook, update)
 				case "Поиск заявок":
 					newStatus(db, hook.userID, "search")
-					if getInt(db, "bot_user", hook.userID, "lastask")==0{
+					if getInt(db, "bot_user", hook.userID, "lastask") == 0 {
 						logicSearch(hook, update)
 					} else {
 						logicSearch(hook, update)
